@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import * as Joi from 'joi';
+import Joi from 'joi';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
