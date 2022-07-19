@@ -52,7 +52,7 @@ export class UsersService {
       }
       return {
         ok: true,
-        token: this.jwt.sign({ id: user.id }),
+        token: this.jwt.sign(user.id),
       };
     } catch (e) {
       return { ok: false, error: 'login error' };
