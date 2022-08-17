@@ -44,7 +44,7 @@ export class UsersResolver {
 
   @Query(() => User)
   me() {
-    console.log('asdasd');
+    console.log('asdasda');
     return { email: 'asd', id: 1 } as User;
   }
 }
