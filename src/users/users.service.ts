@@ -50,6 +50,7 @@ export class UsersService {
     try {
       const user = await this.users.findOne({
         where: { email },
+        select: ['password', 'id'],
       });
       if (!user) {
         return { ok: false, error: 'not exist email' };
@@ -76,5 +77,23 @@ export class UsersService {
       id,
       this.users.create({ ...editProfileInput }),
     );
+  }
+
+  async verifyEmail(code: string): Promise<boolean> {
+    try {
+      const verification = await this.verifications.findOne(
+        { code },
+        { relations: ['user'] },
+      );
+      if (verification) {
+        verification.user.verified = true;
+        await this.users.save(verification.user);
+        return true;
+      }
+      throw new Error();
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
   }
 }
