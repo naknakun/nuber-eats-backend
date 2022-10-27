@@ -12,6 +12,7 @@ import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
 import { UserProfileOutput } from './dtos/user-prfoile.dto';
 import { VerifyEmailOutput } from './dtos/verify-email.dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,7 @@ export class UsersService {
     @InjectRepository(Verification)
     private readonly verifications: Repository<Verification>,
     private readonly jwt: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   getAll(): Promise<User[]> {
@@ -40,7 +42,10 @@ export class UsersService {
       const user = await this.users.save(
         this.users.create({ email, password, role }),
       );
-      await this.verifications.save(this.verifications.create({ user }));
+      const verification = await this.verifications.save(
+        this.verifications.create({ user }),
+      );
+      await this.mailService.sendVerificationEmail(email, verification.code);
 
       return { ok: true };
     } catch (e) {
@@ -90,10 +95,21 @@ export class UsersService {
 
   async editProfile(
     id: number,
-    editProfileInput: EditProfileInput,
+    { email, password }: EditProfileInput,
   ): Promise<EditProfileOutput> {
     try {
-      await this.users.update(id, this.users.create({ ...editProfileInput }));
+      const user = await this.users.findOne(id);
+      if (email) {
+        (user.email = email), (user.verified = false);
+        const verification = await this.verifications.save(
+          this.verifications.create({ user }),
+        );
+        await this.mailService.sendVerificationEmail(email, verification.code);
+      }
+      if (password) {
+        user.password = password;
+      }
+      await this.users.save(user);
       return {
         ok: true,
       };
