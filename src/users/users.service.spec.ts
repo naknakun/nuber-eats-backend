@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from 'src/jwt/jwt.service';
 import { MailService } from 'src/mail/mail.service';
+import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
 import { UsersService } from './users.service';
@@ -22,8 +23,11 @@ const mockMailService = {
   sendVerificationEmail: jest.fn(),
 };
 
+type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
+
 describe('UserService', () => {
   let service: UsersService;
+  let usersRepository: MockRepository<User>;
 
   beforeAll(async () => {
     const modules = await Test.createTestingModule({
@@ -48,13 +52,29 @@ describe('UserService', () => {
       ],
     }).compile();
     service = modules.get<UsersService>(UsersService);
+    usersRepository = modules.get(getRepositoryToken(User));
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  it.todo('createAccount');
+  describe('createAccount', () => {
+    it('should fail if user exists', async () => {
+      usersRepository.findOne.mockResolvedValue({
+        id: 1,
+        email: '',
+      });
+      const result = await service.createAccount({
+        email: '',
+        password: '',
+        role: 1,
+      });
+
+      expect(result).toMatchObject({ ok: false, error: 'exist email' });
+    });
+  });
+
   it.todo('login');
   it.todo('findById');
   it.todo('editProfile');
