@@ -24,10 +24,6 @@ export class UsersService {
     private readonly mailService: MailService,
   ) {}
 
-  getAll(): Promise<User[]> {
-    return this.users.find();
-  }
-
   async createAccount({
     email,
     password,
@@ -132,12 +128,11 @@ export class UsersService {
           ok: true,
         };
       }
-      throw new Error();
+      return { ok: false, error: 'verificaion not found' };
     } catch (error) {
-      console.log(error);
       return {
         ok: false,
-        error,
+        error: 'could not verify email',
       };
     }
   }
